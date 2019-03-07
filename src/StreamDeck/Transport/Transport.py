@@ -5,84 +5,66 @@
 #         www.fourwalledcubicle.com
 #
 
-# pip3 install hidapi (https://pypi.python.org/pypi/hidapi/0.7.99.post8)
-
-from .Transport import Transport
+from abc import ABC, abstractmethod
 
 
-class HIDAPI(Transport):
+class Transport(ABC):
     """
-    USB HID transport layer, using the `hidapi` Python wrapper. This transport
-    can be used to enumerate and communicate with HID devices.
+    Base transport layer, representing an abstract communication back-end which
+    can be used to discovery attached StreamDeck devices.
     """
 
-    class Device(Transport.Device):
-        def __init__(self, device_info):
-            """
-            Creates a new HIDAPI device instance, used to send and receive HID
-            reports from/to an attached USB HID device.
+    class Device(ABC):
+        """
+        Base connection device, representing an abstract connected device which
+        can be communicated with by an upper layer high level protocol.
+        """
 
-            :param dict() device_info: Device information dictionary describing
-                                       a single unique attached USB HID device.
-            """
-            import hid
-
-            self.hid_info = device_info
-            self.hid = hid.device()
-
-        def __del__(self):
-            """
-            Deletion handler for the HIDAPI transport, automatically closing the
-            device if it is currently open.
-            """
-            try:
-                self.hid.close()
-            except (IOError, ValueError):
-                pass
-
+        @abstractmethod
         def open(self):
             """
-            Opens the HID device for input/output. This must be called prior to
-            sending or receiving any HID reports.
+            Opens the device for input/output. This must be called prior to
+            sending or receiving any reports.
 
-            .. seealso:: See :func:`~HIDAPI.Device.close` for the corresponding
-                         close method.
+            .. seealso:: See :func:`~Transport.Device.close` for the
+                         corresponding close method.
             """
-            self.hid.open_path(self.hid_info['path'])
+            pass
 
+        @abstractmethod
         def close(self):
             """
-            Closes theHID  device for input/output.
+            Closes the device for input/output.
 
-            .. seealso:: See :func:`~~HIDAPI.Device.open` for the corresponding
-                         open method.
+            .. seealso:: See :func:`~~Transport.Device.open` for the
+                         corresponding open method.
             """
-            self.hid.close()
+            pass
 
+        @abstractmethod
         def connected(self):
             """
-            Indicates if the physical HID device this instance is attached to
-            is still connected to the host.
+            Indicates if the physical device object this instance is attached
+            to is still connected to the host.
 
             :rtype: bool
             :return: `True` if the device is still connected, `False` otherwise.
             """
-            import hid
+            pass
 
-            devices = hid.enumerate()
-            return any([d['path'] == self.hid_info['path'] for d in devices])
-
+        @abstractmethod
         def path(self):
             """
-            Retrieves the logical path of the attached HID device within the
-            current system. This can be used to differentiate one HID device
-            from another.
+            Retrieves the logical path of the attached device within the
+            current system. This can be used to uniquely differentiate one
+            device from another.
 
             :rtype: str
             :return: Logical device path for the attached device.
             """
-            return self.hid_info['path']
+            pass
 
+        @abstractmethod
         def write_feature(self, payload):
             """
             Sends a HID Feature report to the open HID device.
@@ -95,8 +77,9 @@ class HIDAPI(Transport):
             :rtype: int
             :return: Number of bytes successfully sent to the device.
             """
-            return self.hid.send_feature_report(payload)
+            pass
 
+        @abstractmethod
         def read_feature(self, report_id, length):
             """
             Reads a HID Feature report from the open HID device.
@@ -109,8 +92,9 @@ class HIDAPI(Transport):
                      first byte of the report will be the Report ID of the
                      report that was read.
             """
-            return self.hid.get_feature_report(report_id, length)
+            pass
 
+        @abstractmethod
         def write(self, payload):
             """
             Sends a HID Out report to the open HID device.
@@ -123,41 +107,35 @@ class HIDAPI(Transport):
             :rtype: int
             :return: Number of bytes successfully sent to the device.
             """
-            return self.hid.write(payload)
+            pass
 
+        @abstractmethod
         def read(self, length):
             """
             Performs a blocking read of a HID In report from the open HID device.
 
             :param int length: Maximum length of the In report to read.
 
-            :rtype: list(byte)
+            :rtype: list()
             :return: List of bytes containing the read In report. The first byte
                      of the report will be the Report ID of the report that was
                      read.
             """
-            return self.hid.read(length)
+            pass
 
+    @abstractmethod
     def enumerate(self, vid, pid):
         """
-        Enumerates all available USB HID devices on the system.
+        Enumerates all available devices on the system using the current
+        transport back-end.
 
         :param int vid: USB Vendor ID to filter all devices by, `None` if the
                         device list should not be filtered by vendor.
         :param int pid: USB Product ID to filter all devices by, `None` if the
                         device list should not be filtered by product.
 
-        :rtype: list(HIDAPI.Device)
-        :return: List of discovered USB HID devices.
+        :rtype: list(Transport.Device)
+        :return: List of discovered devices that are available through this
+                 transport back-end.
         """
-
-        if vid is None:
-            vid = 0
-
-        if pid is None:
-            pid = 0
-
-        import hid
-        devices = hid.enumerate(vendor_id=vid, product_id=pid)
-
-        return [HIDAPI.Device(d) for d in devices]
+        pass

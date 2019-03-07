@@ -7,22 +7,33 @@ This is an open source Python 3 library to control an
 without the official software. This can allow you to create your own custom
 front-ends, such as a custom control front-end for home automation software.
 
+[PyPi Project Entry](https://pypi.org/project/streamdeck/)
+
+[Online Documentation](https://python-elgato-streamdeck.readthedocs.io)
+
 ## Credits:
 
 I've used the reverse engineering notes from
 [this GitHub](https://github.com/Lange/node-elgato-stream-deck/blob/master/NOTES.md)
 repository to implement this library. Thanks Alex Van Camp!
 
+Initial StreamDeck Mini support added by [Aetherdyne](https://github.com/Aetherdyne).
+
 ## Status:
 
 Working - you can enumerate devices, set the brightness of the panel(s), set
 the images shown on each button, and read the current button states.
+
+Currently both the StreamDeck and StreamDeck Mini products are supported.
 
 ## Dependencies:
 
 The library core has no special dependencies, but does use one of (potentially)
 several HID backend libraries. You will need to install the dependencies
 appropriate to your chosen backend.
+
+The included example requires the PIL fork "Pillow", although it can be swapped
+out if desired by the user application for any other image manipulation library.
 
 ### HIDAPI Backend
 The default backend is the HIDAPI Python library, which should work across
@@ -31,6 +42,19 @@ the three major (Windows, Mac, Linux) OSes.
 Installation:
 ```
 pip3 install hidapi
+```
+
+## Package Installation:
+
+Install the library via pip:
+
+```
+pip install streamdeck
+```
+
+Alternatively, manually clone the project repository:
+```
+git clone https://github.com/abcminiuser/python-elgato-streamdeck.git
 ```
 
 ## Raspberry Pi Installation:
@@ -55,12 +79,20 @@ pip3 install hidapi
 # Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
 sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
 	SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", GROUP="users"
+	SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", GROUP="users"
 	EOF
 
-# Install git and check out the repository
-sudo apt install -y git
-git clone https://github.com/abcminiuser/python-elgato-streamdeck.git
+# Install the latest version of the StreamDeck library via pip
+pip3 install streamdeck
+
+# Alternatively, install git and check out the repository
+#sudo apt install -y git
+#git clone https://github.com/abcminiuser/python-elgato-streamdeck.git
 ```
+
+Note that after adding the `udev` rule, a restart will be required in order for
+it to take effect and allow access to the StreamDeck device without requiring
+root privileges.
 
 ## License:
 
